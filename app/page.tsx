@@ -1,69 +1,144 @@
-import Image from "next/image";
+"use client";
+
+import { FormEvent, useState } from "react";
+
+type Sport = "voley" | "futbol";
+
+const sports = {
+  voley: { label: "Voley", detail: "6 integrantes", accent: "coral", icon: "V" },
+  futbol: { label: "Futbol", detail: "5 integrantes", accent: "blue", icon: "F" },
+} as const;
 
 export default function Home() {
+  const [sport, setSport] = useState<Sport>("voley");
+  const [submitted, setSubmitted] = useState(false);
+  const [teamName, setTeamName] = useState("");
+  const [captainEmail, setCaptainEmail] = useState("");
+  const [captainName, setCaptainName] = useState(""); 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  
+  const memberCount = sport === "voley" ? 6 : 5;
+  const [members, setMembers] = useState<string[]>(Array(memberCount).fill(""));
+
+  const handleMemberChange = (index: number, value: string) => {
+    const updatedMembers = [...members];
+    updatedMembers[index] = value;
+    setMembers(updatedMembers);
+
+    if (index === 0) {
+      setCaptainName(value);
+    }
+  };
+
+  async function ingresarEquipo() {
+    setIsSubmitting(true);
+    setErrorMessage("");
+    try {
+      const response = await fetch(`/api/equipos/${sport === "voley" ? "Voley" : "Futbol"}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: teamName,
+          sport,
+          captainName,
+          captainEmail,
+          members, 
+        }),
+      });
+
+      const result = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(result.error ?? "No se pudo registrar el equipo.");
+      setSubmitted(true);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "No se pudo registrar el equipo.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    ingresarEquipo();
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="site-shell">
+      <nav className="topbar">
+        <a className="brand" href="#inicio" aria-label="Cancha Abierta inicio">
+          <span className="brand-mark">CA</span>
+          <span>Cancha Abierta</span>
+        </a>
+        <a className="directory-back" href="/inscriptos">Ver equipos inscriptos <span>↗</span></a>
+      </nav>
+
+      <section className="hero" id="inicio">
+        <div className="hero-copy">
+          <p className="eyebrow">Torneo interbarrial <span>•</span> Inscripciones abiertas</p>
+          <h1>El equipo empieza<br /><em>con vos.</em></h1>
+          <p className="hero-text">Arma tu equipo, elegi tu deporte y ven a jugar por algo mas que un resultado.</p>
+          <div className="hero-meta"><span className="meta-icon">01</span><span>Inscripciones hasta el 4 de septiembre</span></div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      <section className="registration-layout" aria-labelledby="registration-title">
+        <div className="form-intro">
+          <p className="section-number">01 / 03</p>
+          <h2 id="registration-title">Inscribi a<br />tu equipo</h2>
+          <p>Completa los datos y asegura tu lugar en la cancha.</p>
+          <div className="progress-line"><span /></div>
+          <p className="required-note"><span>*</span> Campos obligatorios</p>
         </div>
-      </main>
-    </div>
+
+        <form className="registration-form" onSubmit={handleSubmit}>
+          <fieldset>
+            <legend>Elegir deporte</legend>
+            <div className="sport-options">
+              {(Object.keys(sports) as Sport[]).map((key) => {
+                const item = sports[key];
+                return <button type="button" key={key} className={`sport-card ${sport === key ? "selected" : ""} ${item.accent}`} onClick={() => { setSport(key); setMembers(Array(key === "voley" ? 6 : 5).fill("")); setSubmitted(false); setErrorMessage(""); }} aria-pressed={sport === key}>
+                  <span className="sport-icon">{item.icon}</span><span className="sport-info"><strong>{item.label}</strong><small>{item.detail}</small></span><span className="radio-mark" />
+                </button>;
+              })}
+            </div>
+          </fieldset>
+
+          <div className="field-grid">
+            <label>Nombre del equipo <span>*</span><input required value={teamName} onChange={(event) => setTeamName(event.target.value)} placeholder="Ej. Equipo 1" /></label>
+          </div>
+          <div className="form-divider" />
+          <div className="captain-heading"><div><p className="mini-label">Responsable del equipo</p><h3>Datos del capitan</h3></div><span className="captain-badge">CAPITAN</span></div>
+          <div className="field-grid">
+            <label>Nombre completo <span>*</span><input required value={captainName} onChange={(event) => handleMemberChange(0, event.target.value)} placeholder="Nombre y apellido" /></label>
+            <label>Correo electronico <span>*</span><input required type="email" value={captainEmail} onChange={(event) => setCaptainEmail(event.target.value)} placeholder="nombre@correo.com" /></label>
+          </div>
+          
+          <div className="members-heading"><div><p className="mini-label">Integrantes</p><h3>Lista del equipo</h3></div><span className="count-badge">{memberCount} lugares</span></div>
+          
+          <div className="members-list">
+            {members.map((memberValue, index) => (
+              <label className="member-row" key={`${sport}-${index}`}>
+                <span className="member-number">0{index + 1}</span>
+                <input 
+                  required 
+                  placeholder={index === 0 ? "Nombre del capitan" : "Nombre completo del jugador"} 
+                  value={memberValue}
+                  onChange={(e) => handleMemberChange(index, e.target.value)}
+                />
+                <span className="member-check" />
+              </label>
+            ))}
+          </div>
+
+          <label className="terms"><input required type="checkbox" /><span>Acepto las condiciones de participacion y el reglamento del torneo.</span></label>
+          {submitted ? <div className="success-message" role="status">Equipo registrado. Recibimos la inscripcion de {teamName || "tu equipo"}.</div> : <button className="submit-button" type="submit" disabled={isSubmitting}>{isSubmitting ? "Guardando equipo..." : "Confirmar inscripcion"} <span>↗</span></button>}
+          {errorMessage && <div className="error-message" role="alert">{errorMessage}</div>}
+          <p className="privacy-note">Tus datos solo seran usados para coordinar el torneo.</p>
+        </form>
+      </section>
+      <footer><span>Cancha Abierta 2026</span><span>Hecho para jugar juntos <b>+</b></span></footer>
+    </main>
   );
 }
