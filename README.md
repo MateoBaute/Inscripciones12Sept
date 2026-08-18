@@ -34,3 +34,13 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Conexion con phpMyAdmin / MariaDB
+
+phpMyAdmin administra la base de datos MariaDB; la app se conecta al mismo servidor mediante `mysql2`.
+
+1. Importa `inscriptos.sql` desde phpMyAdmin. La base debe llamarse `inscriptos` y contener las tablas `voley` y `futbol`.
+2. Copia `.env.example` como `.env.local` y completa las credenciales de MariaDB. En XAMPP normalmente son `DB_HOST=127.0.0.1`, `DB_PORT=3306`, `DB_USER=root`, `DB_PASSWORD=` y `DB_NAME=inscriptos`.
+3. Inicia MariaDB desde XAMPP/WAMP y ejecuta `npm run dev`.
+
+Las rutas `POST /api/equipos/Voley` y `POST /api/equipos/Futbol` validan la cantidad de integrantes, insertan con consultas parametrizadas y devuelven mensajes claros para errores de validacion o conexion.
